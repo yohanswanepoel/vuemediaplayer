@@ -1,14 +1,20 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
+import PlayVideo from '../components/PlayVideo.vue'
+
 
 Vue.use(VueRouter)
 
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    name: 'VideoPlayer',
+    component: PlayVideo
+  },
+  {
+    path: '/playvideo',
+    namne: 'VideoPlayer',
+    component: PlayVideo
   },
   {
     path: '/about',
@@ -21,7 +27,7 @@ const routes = [
 ]
 
 const router = new VueRouter({
-  mode: 'history',
+  mode: process.env.IS_ELECTRON ? 'hash' : 'history',
   base: process.env.BASE_URL,
   routes
 })
