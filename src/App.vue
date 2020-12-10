@@ -15,6 +15,10 @@
   color: #2c3e50;
 }
 
+html, body, #app, section.section {
+  height: 100%;
+}
+
 #nav {
   padding: 20px;
 }

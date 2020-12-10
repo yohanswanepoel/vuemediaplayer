@@ -1,6 +1,11 @@
 <template>
-    <div>
+    <div style="100%">
         <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <button class="btn btn-outline-primary btn-sm" v-on:click="showVideos()">Videos</button> | <button class="btn btn-outline-primary btn-sm"  v-on:click="showImages()">Images</button>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-12">
                     <button type="button" class="btn btn-sm btn-primary" v-on:click="back()">Back</button>
@@ -9,7 +14,7 @@
             </div>
             <div class="row">
                 <div class="col-4">
-                    <div class="overflow-auto" style="width: 100%; height:700px">
+                    <div class="overflow-auto" :style="fileStyle">
                         <ul class="list-group">
                             <li class="list-group-item" v-for="item in items" :key="item.name" v-on:click='handlefileclick(item)'>
                                 {{ item.name }}
@@ -20,10 +25,10 @@
                     </div>
                 </div>
                 <div class="col-8">
-                    <button type="button" class="btn btn-primary btn-sm" v-on:click='randomplayone()'>One <i class="fas fa-random fa-lg"></i></button> | 
-                    <button type="button" class="btn btn-primary btn-sm" v-on:click='playallrandom()'>All <i class="fas fa-random fa-lg"></i></button>
+                    <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='randomplayone()'>One <i class="fas fa-random fa-lg"></i></button> | 
+                    <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='playallrandom()'>All <i class="fas fa-random fa-lg"></i></button>
                     <br>
-                    <video class="media" width="1000" height="700" controls ref="video" @ready="ready"
+                    <video v-if="type==VIDEO_TYPE" class="media" width="1000" :height="mediaHeight" controls ref="video" @ready="ready"
                         @ended="ended"
                         @playing="playing"
                         @paused="paused"
@@ -31,6 +36,7 @@
                         @qued="qued">
                         <source v-bind:src="fullpath(file)" type="video/mp4" >
                     </video>
+                    <img v-if="type==IMAGE_TYPE" :height="mediaHeight" style="width:100%; object-fit: contain" v-bind:src="fullpath(file)"></img>
                     <br>
                     {{ file }}
                 <!-- Content here -->
@@ -46,6 +52,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os')
 const electron = require('electron');
+const VIDEO = 1;
+const IMAGE = 2;
 
 export default {
     name: 'PlayVideo',
@@ -57,6 +65,12 @@ export default {
             playlist: [],
             playall: false,
             playrandom: false,
+            type: VIDEO,
+            VIDEO_TYPE: VIDEO, 
+            IMAGE_TYPE: IMAGE,
+            windowHeight: window.innerHeight,
+            mediaHeight: 700,
+            fileStyle: "width: 100%; height:700px",
         }
     },
     created(){
@@ -88,8 +102,35 @@ export default {
             }
         });
     },
+    watch: {
+        windowHeight(newHeight, oldHeight) {
+        //console.log(`it changed to ${newHeight} from ${oldHeight}`);
+        }
+    },
+    mounted() {
+        this.$nextTick(() => {
+        window.addEventListener('resize', this.onResize);
+        })
+    },
+
+    beforeDestroy() { 
+        window.removeEventListener('resize', this.onResize); 
+    },
     methods: {
-        
+        onResize() {
+            this.windowHeight = window.innerHeight
+            this.mediaHeight = parseInt(this.windowHeight * .8);
+            this.fileStyle = "width: 100%; height:" + parseInt(this.windowHeight * .8) + "px";
+            console.log(this.fileStyle);
+        },
+        showVideos() {
+            this.type = VIDEO;
+            this.loadfiles();
+        },
+        showImages(){
+            this.type = IMAGE;
+            this.loadfiles();
+        },
         ready () { console.log('ready') },
         ended () {
             this.randomplay();
@@ -129,6 +170,7 @@ export default {
         },
         fullpath(filename) {
             // create full path
+            //console.log(filename)
             return "file://" + this.folder + filename; 
         },
         loadfilesonenter(e){
@@ -150,12 +192,22 @@ export default {
                 var file = {}
                 var stat = fs.statSync(dir + f)
                 var size = Math.trunc(stat.size / 1048576)
-                if (stat.isFile() && f.endsWith('mp4')){
-                    file.name = f;
-                    file.size = size;
-                    file.isVideo = true;
-                    file.isFolder = false;
-                    this.items.push(file)
+                if (stat.isFile()){
+                    if (this.type == VIDEO && (f.endsWith('mp4') || f.endsWith('webm'))){
+                        file.name = f;
+                        file.size = size;
+                        file.isVideo = true;
+                        file.isImage = false;
+                        file.isFolder = false;
+                        this.items.push(file)
+                    } else if (this.type == IMAGE && (f.endsWith('gif') || f.endsWith('jpg') || f.endsWith('JPG') || f.endsWith('webp'))){
+                        file.name = f;
+                        file.size = size;
+                        file.isVideo = false;
+                        file.isImage = true;
+                        file.isFolder = false;
+                        this.items.push(file)
+                    }
                 }
                 if (stat.isDirectory()){
                     file.name = f;
@@ -180,19 +232,24 @@ export default {
         },
         handlefileclick(aItem){
             this.playall = false;
-            if (aItem.isVideo) {
-                this.file = aItem.name;
-                //Force video load.
-                this.playlist = [];
-                this.playlist.push(aItem);
-                var vid = this.$refs.video;
-                vid.autoplay = false;
-                vid.load();
-                vid.play();
-            }
+           
             if (aItem.isFolder) {
                 this.folder = this.folder + aItem.name + "/";
                 this.loadfiles();
+            }else{
+                if (aItem.isImage){
+                    this.file = aItem.name;
+                }
+                if (aItem.isVideo) {
+                    this.file = aItem.name;
+                    //Force video load.
+                    this.playlist = [];
+                    this.playlist.push(aItem);
+                    var vid = this.$refs.video;
+                    vid.autoplay = false;
+                    vid.load();
+                    vid.play();
+                }
             }
         }
     },
