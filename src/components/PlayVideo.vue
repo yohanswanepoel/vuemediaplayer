@@ -71,15 +71,17 @@ export default {
             windowHeight: window.innerHeight,
             mediaHeight: 700,
             fileStyle: "width: 100%; height:700px",
+            currentItem: -1
         }
     },
     created(){
         this.folder = this.normaliseFolder(process.cwd());
         this.folder = os.homedir();
-        //console.log(electron);
+        //console.log("Add listeners");
         this.loadfiles();
         //folder = electron.remote.app.getPath("exe");
         window.addEventListener('keydown', (e) => {
+            //console.log("Pressed: " + e.key);
             if (e.key == 'ArrowRight') {
                 
             }
@@ -87,18 +89,12 @@ export default {
                 
             }
             else if (e.key == 'ArrowUp') {
-                if(this.playrandom){
-                    this.randomplayone();
-                } else {
-
-                }
+                this.playprevious();
+                
             }
             else if (e.key == 'ArrowDown') {
-               if(this.playrandom){
-                    this.randomplayone();
-                } else {
-
-                }
+                this.playprevious();
+               
             }
         });
     },
@@ -152,6 +148,34 @@ export default {
                 folder = folder + "/";
             }
             return folder;
+        },
+        playnext(){
+            if(this.type == VIDEO){
+                if(this.playrandom){
+                    this.randomplayone();
+                } else {
+
+                }
+            }else{
+                this.randomimage();
+            }
+            
+        },
+        playprevious(){
+            if(this.type == VIDEO){
+                if(this.playrandom){
+                    this.randomplayone();
+                } else {
+
+                }
+            }else{
+                this.randomimage();
+            }
+        },
+        randomimage(){
+            // might have to load videos into source element
+            const random = Math.floor(Math.random() * this.items.length);
+            this.handlefileclick(this.items[random]);
         },
         randomplayone(){
             this.playrandom = true;
@@ -221,14 +245,16 @@ export default {
             // might have to load videos into source element
             const random = Math.floor(Math.random() * this.items.length);
             this.handlefileclick(this.items[random]);
-            var vid = this.$refs.video;
-            vid.load();
-            if (this.playall){
-                vid.autoplay = true;
-            } else {
-                vid.autoplay = false;
+            if(this.type == VIDEO){
+                var vid = this.$refs.video;
+                vid.load();
+                if (this.playall){
+                    vid.autoplay = true;
+                } else {
+                    vid.autoplay = false;
+                }
+                vid.play();
             }
-            vid.play();
         },
         handlefileclick(aItem){
             this.playall = false;
