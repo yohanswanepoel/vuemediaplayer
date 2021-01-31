@@ -93,7 +93,7 @@ export default {
                 
             }
             else if (e.key == 'ArrowDown') {
-                this.playprevious();
+                this.playnext();
                
             }
         });
@@ -152,9 +152,13 @@ export default {
         playnext(){
             if(this.type == VIDEO){
                 if(this.playrandom){
-                    this.randomplayone();
+                    this.randomplay();
                 } else {
-
+                    if (this.currentItem == (this.items.length - 1)){
+                        this.handlefileclick(this.items[0]);
+                    } else {
+                        this.handlefileclick(this.items[this.currentItem + 1]);
+                    }
                 }
             }else{
                 this.randomimage();
@@ -166,7 +170,11 @@ export default {
                 if(this.playrandom){
                     this.randomplayone();
                 } else {
-
+                    if (this.currentItem == 0){
+                        this.handlefileclick(this.items[this.items.length - 1]);
+                    } else {
+                        this.handlefileclick(this.items[this.currentItem - 1]);
+                    }
                 }
             }else{
                 this.randomimage();
@@ -179,18 +187,13 @@ export default {
         },
         randomplayone(){
             this.playrandom = true;
-            this.autoplay = false;
+            //this.autoplay = false;
             this.randomplay();
         },
         playallrandom(){
             this.playrandom = true;
-            this.autoplay = true;
+            //this.autoplay = true;
             this.randomplay();
-        },
-        playnext(){
-            if (this.playall){
-                this.randomplay();
-            }
         },
         fullpath(filename) {
             // create full path
@@ -212,25 +215,30 @@ export default {
                         return fs.statSync(dir + b).mtime.getTime() - 
                                 fs.statSync(dir + a).mtime.getTime();
                     });
+            var counter = 0;
             for ( var f of files){
                 var file = {}
                 var stat = fs.statSync(dir + f)
                 var size = Math.trunc(stat.size / 1048576)
                 if (stat.isFile()){
                     if (this.type == VIDEO && (f.endsWith('mp4') || f.endsWith('webm'))){
+                        file.order = counter;
                         file.name = f;
                         file.size = size;
                         file.isVideo = true;
                         file.isImage = false;
                         file.isFolder = false;
                         this.items.push(file)
+                        counter ++;
                     } else if (this.type == IMAGE && (f.endsWith('gif') || f.endsWith('jpg') || f.endsWith('JPG') || f.endsWith('webp'))){
+                        file.order = counter;
                         file.name = f;
                         file.size = size;
                         file.isVideo = false;
                         file.isImage = true;
                         file.isFolder = false;
-                        this.items.push(file)
+                        this.items.push(file);
+                        counter ++;
                     }
                 }
                 if (stat.isDirectory()){
@@ -245,7 +253,7 @@ export default {
             // might have to load videos into source element
             const random = Math.floor(Math.random() * this.items.length);
             this.handlefileclick(this.items[random]);
-            if(this.type == VIDEO){
+            /*if(this.type == VIDEO){
                 var vid = this.$refs.video;
                 vid.load();
                 if (this.playall){
@@ -254,7 +262,7 @@ export default {
                     vid.autoplay = false;
                 }
                 vid.play();
-            }
+            }*/
         },
         handlefileclick(aItem){
             this.playall = false;
@@ -271,8 +279,9 @@ export default {
                     //Force video load.
                     this.playlist = [];
                     this.playlist.push(aItem);
+                    this.currentItem = aItem.order;
                     var vid = this.$refs.video;
-                    vid.autoplay = false;
+                    //vid.autoplay = false;
                     vid.load();
                     vid.play();
                 }

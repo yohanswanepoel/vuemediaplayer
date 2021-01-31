@@ -1,6 +1,6 @@
 {
   "name": "vueplayer",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -28,8 +28,8 @@
     "@vue/cli-plugin-vuex": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "bootstrap": "^4.5.3",
-    "electron": "^9.0.0",
-    "electron-devtools-installer": "^3.1.0",
+    "electron": "^11.2.0",
+    "electron-devtools-installer": "^3.1.1",
     "popper.js": "^1.16.1",
     "portal-vue": "^2.1.6",
     "sass": "^1.19.0",
