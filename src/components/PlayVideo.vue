@@ -16,7 +16,7 @@
                 <div class="col-4">
                     <div class="overflow-auto" :style="fileStyle">
                         <ul class="list-group">
-                            <li class="list-group-item" v-for="item in items" :key="item.name" v-on:click='handlefileclick(item)'>
+                            <li class="list-group-item" v-for="(item, index) in items" :key="item.name" v-on:click='handlefileclick(item, index)' :active="index == currentItem">
                                 {{ item.name }}
                                 <span v-if='item.isFile'> - {{ item.size }} MB</span>
                                 <span v-if='item.isFolder'>/</span>
@@ -25,8 +25,10 @@
                     </div>
                 </div>
                 <div class="col-8">
-                    <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='randomplayone()'>One <i class="fas fa-random fa-lg"></i></button> | 
-                    <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='playallrandom()'>All <i class="fas fa-random fa-lg"></i></button>
+                    <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='playallrandom()'>Randomize <i class="fas fa-random fa-lg"></i></button>
+                    | 
+                   <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='loadfiles()'>Re-sort <i class="fas fa-sort fa-lg"></i></button>
+                    
                     <br>
                     <video v-if="type==VIDEO_TYPE" class="media" width="1000" :height="mediaHeight" controls ref="video" @ready="ready"
                         @ended="ended"
@@ -129,8 +131,7 @@ export default {
         },
         ready () { console.log('ready') },
         ended () {
-            this.randomplay();
-            console.log('ended') 
+            this.playnext(); 
             },
         playing () { console.log('playing') },
         paused () { console.log('paused') },
@@ -150,50 +151,33 @@ export default {
             return folder;
         },
         playnext(){
-            if(this.type == VIDEO){
-                if(this.playrandom){
-                    this.randomplay();
-                } else {
-                    if (this.currentItem == (this.items.length - 1)){
-                        this.handlefileclick(this.items[0]);
-                    } else {
-                        this.handlefileclick(this.items[this.currentItem + 1]);
-                    }
-                }
-            }else{
-                this.randomimage();
+            if (this.currentItem == (this.items.length - 1)){
+                this.handlefileclick(this.items[nextTrack], nextTrack);
+            } else {
+                this.handlefileclick(this.items[this.currentItem + 1], this.currentItem + 1);
             }
-            
         },
         playprevious(){
-            if(this.type == VIDEO){
-                if(this.playrandom){
-                    this.randomplayone();
-                } else {
-                    if (this.currentItem == 0){
-                        this.handlefileclick(this.items[this.items.length - 1]);
-                    } else {
-                        this.handlefileclick(this.items[this.currentItem - 1]);
-                    }
-                }
-            }else{
-                this.randomimage();
+            if (this.currentItem == 0){
+                this.handlefileclick(this.items[this.items.length - 1], this.items.length - 1);
+            } else {
+                this.handlefileclick(this.items[this.currentItem - 1], this.currentItem - 1);
             }
         },
         randomimage(){
             // might have to load videos into source element
             const random = Math.floor(Math.random() * this.items.length);
-            this.handlefileclick(this.items[random]);
-        },
-        randomplayone(){
-            this.playrandom = true;
-            //this.autoplay = false;
-            this.randomplay();
+            this.handlefileclick(this.items[random], random);
         },
         playallrandom(){
-            this.playrandom = true;
-            //this.autoplay = true;
-            this.randomplay();
+            var tmpArr = this.items;
+            for (let i = tmpArr.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1)); // random index from 0 to i
+                // we use "destructuring assignment" syntax to achieve that
+                [tmpArr[i], tmpArr[j]] = [tmpArr[j], tmpArr[i]];
+            }
+            this.items = []
+            this.items = tmpArr;
         },
         fullpath(filename) {
             // create full path
@@ -249,43 +233,29 @@ export default {
                 }
             }
         },
-        randomplay(){
-            // might have to load videos into source element
-            const random = Math.floor(Math.random() * this.items.length);
-            this.handlefileclick(this.items[random]);
-            /*if(this.type == VIDEO){
-                var vid = this.$refs.video;
-                vid.load();
-                if (this.playall){
-                    vid.autoplay = true;
-                } else {
-                    vid.autoplay = false;
-                }
-                vid.play();
-            }*/
-        },
-        handlefileclick(aItem){
-            this.playall = false;
-           
-            if (aItem.isFolder) {
-                this.folder = this.folder + aItem.name + "/";
-                this.loadfiles();
-            }else{
-                if (aItem.isImage){
-                    this.file = aItem.name;
-                }
-                if (aItem.isVideo) {
-                    this.file = aItem.name;
-                    //Force video load.
-                    this.playlist = [];
-                    this.playlist.push(aItem);
-                    this.currentItem = aItem.order;
-                    var vid = this.$refs.video;
-                    //vid.autoplay = false;
-                    vid.load();
-                    vid.play();
+        handlefileclick(aItem, anIndex){
+            if (typeof aItem !== 'undefined'){
+                if (aItem.isFolder) {
+                    this.folder = this.folder + aItem.name + "/";
+                    this.loadfiles();
+                }else{
+                    if (aItem.isImage){
+                        this.file = aItem.name;
+                    }
+                    if (aItem.isVideo) {
+                        this.file = aItem.name;
+                        //Force video load.
+                        this.playlist = [];
+                        this.playlist.push(aItem);
+                        this.currentItem = anIndex;
+                        var vid = this.$refs.video;
+                        //vid.autoplay = false;
+                        vid.load();
+                        vid.play();
+                    }
                 }
             }
+            
         }
     },
     computed: {
