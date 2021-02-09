@@ -14,9 +14,9 @@
             </div>
             <div class="row">
                 <div class="col-4">
-                    <div class="overflow-auto" :style="fileStyle">
+                    <div id="fileContainer" class="overflow-auto" :style="fileStyle">
                         <ul class="list-group">
-                            <li class="list-group-item" v-for="(item, index) in items" :key="item.name" v-on:click='handlefileclick(item, index)' :active="index == currentItem">
+                            <li v-bind:class="{ active: index == currentItem }" class="list-group-item" v-for="(item, index) in items" :key="item.name" v-on:click='handlefileclick(item, index)'>
                                 {{ item.name }}
                                 <span v-if='item.isFile'> - {{ item.size }} MB</span>
                                 <span v-if='item.isFolder'>/</span>
@@ -151,6 +151,7 @@ export default {
             return folder;
         },
         playnext(){
+            this.scrollToSelect(this.currentItem - 1);
             if (this.currentItem == (this.items.length - 1)){
                 this.handlefileclick(this.items[nextTrack], nextTrack);
             } else {
@@ -158,11 +159,17 @@ export default {
             }
         },
         playprevious(){
+            this.scrollToSelect(this.currentItem - 1);
             if (this.currentItem == 0){
                 this.handlefileclick(this.items[this.items.length - 1], this.items.length - 1);
             } else {
                 this.handlefileclick(this.items[this.currentItem - 1], this.currentItem - 1);
             }
+        },
+        scrollToSelect(index){
+            var container = this.$el.querySelector("#fileContainer");
+            //container.scrollTop = container.scrollHeight;
+            container.scrollTop = (49 * index) - 49;
         },
         randomimage(){
             // might have to load videos into source element
