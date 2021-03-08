@@ -25,10 +25,11 @@
                     </div>
                 </div>
                 <div class="col-8">
+                    <span>Filter: </span><input v-model="filter" v-on:keyup="filterList">
+                    | 
                     <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='playallrandom()'>Randomize <i class="fas fa-random fa-lg"></i></button>
                     | 
-                   <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='loadfiles()'>Re-sort <i class="fas fa-sort fa-lg"></i></button>
-                    
+                   <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='loadfiles_btn()'>Reload Files <i class="fas fa-sort fa-lg"></i></button>
                     <br>
                     <video v-if="type==VIDEO_TYPE" class="media" width="1000" :height="mediaHeight" controls ref="video" @ready="ready"
                         @ended="ended"
@@ -73,7 +74,8 @@ export default {
             windowHeight: window.innerHeight,
             mediaHeight: 700,
             fileStyle: "width: 100%; height:700px",
-            currentItem: -1
+            currentItem: -1,
+            filter: ''
         }
     },
     created(){
@@ -128,6 +130,20 @@ export default {
         showImages(){
             this.type = IMAGE;
             this.loadfiles();
+        },
+        filterList(){
+            this.loadfiles();
+            var tmpArr = [];
+            var file = {};
+            for (let i = 0; i < this.items.length; i++) {
+                if (this.items[i].name.toUpperCase().indexOf(this.filter.toUpperCase()) > -1){
+                    file = this.items[i];
+                    tmpArr.push(file);
+                }
+            }
+            this.items = []
+            this.items = tmpArr;
+            
         },
         ready () { console.log('ready') },
         ended () {
@@ -193,8 +209,12 @@ export default {
         },
         loadfilesonenter(e){
              if (e.keyCode === 13) {
-                this.loadfiles();
+                this.loadfiles_btn();
             } 
+        },
+        loadfiles_btn(){
+            this.filter = '';
+            this.loadfiles();
         },
         loadfiles(){
             this.folder = this.normaliseFolder(this.folder);
