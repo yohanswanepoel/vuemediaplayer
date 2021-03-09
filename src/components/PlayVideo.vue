@@ -46,30 +46,6 @@
     </div>
 </template>
 
-<style scoped>
-    .wrapper {
-        display: flex;
-        width: 100%;
-        align-items: stretch;
-    }
-    #sidebar {
-        min-width: 500px;
-        max-width: 500px;
-        min-height: 88vh;
-        margin-left: -500px;
-         /* don't forget to add all the previously mentioned styles here too */
-        background: #c4c4c4;
-        color: rgb(0, 0, 0);
-        transition: all 0.3s;
-    }
-    #sidebar.active {
-        margin-left: 0;
-    }
-    .list-group-item.active {
-        background: #8b8b8b;
-    }
-
-</style>
 <script>
 import { remote } from 'electron';
 const fs = require('fs');
