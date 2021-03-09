@@ -1,54 +1,64 @@
 <template>
-    <div style="100%">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <button class="btn btn-outline-primary btn-sm" v-on:click="showVideos()">Videos</button> | <button class="btn btn-outline-primary btn-sm"  v-on:click="showImages()">Images</button>
-                </div>
+    <div class="wrapper">
+        
+        
+        <nav id="sidebar"  v-bind:class="{active: showSideBar}">
+            <button class="btn btn-outline-primary btn-sm" v-on:click="showVideos()">Videos</button> | <button class="btn btn-outline-primary btn-sm"  v-on:click="showImages()">Images</button>
+            <br><span>Path: </span><input v-model="folder" style="width: 80%;" v-on:blur="loadfiles()" v-on:keyup="loadfilesonenter">   
+            <br><button type="button" class="btn btn-sm btn-primary" v-on:click="back()">Back</button>
+             | <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='loadfiles_btn()'>Reload Files <i class="fas fa-sort fa-lg"></i></button>
+             | <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='playallrandom()'>Randomize <i class="fas fa-random fa-lg"></i></button>
+            <br><span>Filter: </span><input v-model="filter" style="width: 80%;" v-on:keyup="filterList">
+            <div id="fileContainer" class="overflow-auto" :style="fileStyle">
+                <ul class="list-group">
+                    <li v-bind:class="{ active: index == currentItem }" class="list-group-item" v-for="(item, index) in items" :key="item.name" v-on:click='handlefileclick(item, index)'>
+                        {{ item.name }}
+                        <span v-if='item.isFile'> - {{ item.size }} MB</span>
+                        <span v-if='item.isFolder'>/</span>
+                    </li>
+                </ul>
             </div>
-            <div class="row">
-                <div class="col-12">
-                    <button type="button" class="btn btn-sm btn-primary" v-on:click="back()">Back</button>
-                    <input v-model="folder" style="width: 80%;" v-on:blur="loadfiles()" v-on:keyup="loadfilesonenter">   
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-4">
-                    <div id="fileContainer" class="overflow-auto" :style="fileStyle">
-                        <ul class="list-group">
-                            <li v-bind:class="{ active: index == currentItem }" class="list-group-item" v-for="(item, index) in items" :key="item.name" v-on:click='handlefileclick(item, index)'>
-                                {{ item.name }}
-                                <span v-if='item.isFile'> - {{ item.size }} MB</span>
-                                <span v-if='item.isFolder'>/</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-8">
-                    <span>Filter: </span><input v-model="filter" v-on:keyup="filterList">
-                    | 
-                    <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='playallrandom()'>Randomize <i class="fas fa-random fa-lg"></i></button>
-                    | 
-                   <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='loadfiles_btn()'>Reload Files <i class="fas fa-sort fa-lg"></i></button>
-                    <br>
-                    <video v-if="type==VIDEO_TYPE" class="media" width="1000" :height="mediaHeight" controls ref="video" @ready="ready"
-                        @ended="ended"
-                        @playing="playing"
-                        @paused="paused"
-                        @buffering="buffering"
-                        @qued="qued">
-                        <source v-bind:src="fullpath(file)" type="video/mp4" >
-                    </video>
-                    <img v-if="type==IMAGE_TYPE" :height="mediaHeight" style="width:100%; object-fit: contain" v-bind:src="fullpath(file)"></img>
-                    <br>
-                    {{ file }}
-                <!-- Content here -->
-                </div>
-            </div>
+        </nav>
+        <div id="content" class="container-fluid">
+            <button type="button" id="sidebarCollapse" v-on:click="toggleSideBar()" class="btn btn-info">
+            <i class="fas fa-align-left"></i>
+            <span>Files</span>
+        </button>
+            Now Playing: {{ file }}
+            <video v-if="type==VIDEO_TYPE" class="media" width="100%" :height="mediaHeight" controls ref="video" @ready="ready"
+                @ended="ended"
+                @playing="playing"
+                @paused="paused"
+                @buffering="buffering"
+                @qued="qued">
+                <source v-bind:src="fullpath(file)" type="video/mp4" >
+            </video>
+            <img v-if="type==IMAGE_TYPE" :height="mediaHeight" style="width:100%; object-fit: contain" v-bind:src="fullpath(file)">    
         </div>
     </div>
 </template>
 
+<style scoped>
+    .wrapper {
+        display: flex;
+        width: 100%;
+        align-items: stretch;
+    }
+    #sidebar {
+        min-width: 500px;
+        max-width: 500px;
+        min-height: 88vh;
+        margin-left: -500px;
+         /* don't forget to add all the previously mentioned styles here too */
+        background: #a5a8b5;
+        color: rgb(0, 0, 0);
+        transition: all 0.3s;
+    }
+    #sidebar.active {
+        margin-left: 0;
+    }
+
+</style>
 <script>
 import { remote } from 'electron';
 const fs = require('fs');
@@ -75,7 +85,8 @@ export default {
             mediaHeight: 700,
             fileStyle: "width: 100%; height:700px",
             currentItem: -1,
-            filter: ''
+            filter: '',
+            showSideBar: false
         }
     },
     created(){
@@ -101,6 +112,11 @@ export default {
                
             }
         });
+
+
+        this.mediaHeight = parseInt(this.windowHeight * .89);
+
+        
     },
     watch: {
         windowHeight(newHeight, oldHeight) {
@@ -117,10 +133,13 @@ export default {
         window.removeEventListener('resize', this.onResize); 
     },
     methods: {
+        toggleSideBar(){ 
+            this.showSideBar = !this.showSideBar;
+        },
         onResize() {
             this.windowHeight = window.innerHeight
-            this.mediaHeight = parseInt(this.windowHeight * .8);
-            this.fileStyle = "width: 100%; height:" + parseInt(this.windowHeight * .8) + "px";
+            this.mediaHeight = parseInt(this.windowHeight * .89);
+            this.fileStyle = "width: 100%; height:" + parseInt(this.windowHeight * .7) + "px";
             console.log(this.fileStyle);
         },
         showVideos() {
@@ -279,6 +298,7 @@ export default {
                         //vid.autoplay = false;
                         vid.load();
                         vid.play();
+                        this.showSideBar = false;
                     }
                 }
             }
