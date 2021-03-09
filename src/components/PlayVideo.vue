@@ -3,12 +3,19 @@
         
         
         <nav id="sidebar"  v-bind:class="{active: showSideBar}">
-            <button class="btn btn-outline-primary btn-sm" v-on:click="showVideos()">Videos</button> | <button class="btn btn-outline-primary btn-sm"  v-on:click="showImages()">Images</button>
-            <br><span>Path: </span><input v-model="folder" style="width: 80%;" v-on:blur="loadfiles()" v-on:keyup="loadfilesonenter">   
-            <br><button type="button" class="btn btn-sm btn-primary" v-on:click="back()">Back</button>
-             | <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='loadfiles_btn()'>Reload Files <i class="fas fa-sort fa-lg"></i></button>
-             | <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-primary btn-sm" v-on:click='playallrandom()'>Randomize <i class="fas fa-random fa-lg"></i></button>
-            <br><span>Filter: </span><input v-model="filter" style="width: 80%;" v-on:keyup="filterList">
+            <div>
+                <input v-model="folder" placeholder="path" style="width: 100%;" v-on:blur="loadfiles()" v-on:keyup="loadfilesonenter">   
+            </div>
+            <div>
+                    <input v-model="filter" placeholder="filter" style="width: 55%;" v-on:keyup="filterList">
+                     | <button class="btn btn-outline-secondary btn-sm" v-bind:class="{ active: type == 1 }" v-on:click="showVideos()">Vid</button>
+                     | <button class="btn btn-outline-secondary btn-sm" v-bind:class="{ active: type == 2 }"  v-on:click="showImages()">Img</button>
+            </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-secondary" v-on:click="back()"><i class="fas fa-undo fa-lg"></i> Back</button>
+                | <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-secondary btn-sm" v-on:click='loadfiles_btn()'><i class="fas fa-sort fa-lg"></i> Reload</button>
+                | <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-secondary btn-sm" v-on:click='playallrandom()'><i class="fas fa-random fa-lg"></i> Random</button>
+            </div>
             <div id="fileContainer" class="overflow-auto" :style="fileStyle">
                 <ul class="list-group">
                     <li v-bind:class="{ active: index == currentItem }" class="list-group-item" v-for="(item, index) in items" :key="item.name" v-on:click='handlefileclick(item, index)'>
@@ -20,11 +27,12 @@
             </div>
         </nav>
         <div id="content" class="container-fluid">
-            <button type="button" id="sidebarCollapse" v-on:click="toggleSideBar()" class="btn btn-info">
-            <i class="fas fa-align-left"></i>
-            <span>Files</span>
-        </button>
-            Now Playing: {{ file }}
+            <div style="padding-bottom: 5px">
+                <button type="button" id="sidebarCollapse" v-on:click="toggleSideBar()" class="btn-sm btn-secondary">
+                    <i class="fas fa-align-left"></i> Files
+                </button>
+                Now Playing: {{ file }}
+            </div>
             <video v-if="type==VIDEO_TYPE" class="media" width="100%" :height="mediaHeight" controls ref="video" @ready="ready"
                 @ended="ended"
                 @playing="playing"
@@ -50,12 +58,15 @@
         min-height: 88vh;
         margin-left: -500px;
          /* don't forget to add all the previously mentioned styles here too */
-        background: #a5a8b5;
+        background: #c4c4c4;
         color: rgb(0, 0, 0);
         transition: all 0.3s;
     }
     #sidebar.active {
         margin-left: 0;
+    }
+    .list-group-item.active {
+        background: #8b8b8b;
     }
 
 </style>
@@ -250,8 +261,9 @@ export default {
                 var file = {}
                 var stat = fs.statSync(dir + f)
                 var size = Math.trunc(stat.size / 1048576)
+                var f_upper = f.toUpperCase()
                 if (stat.isFile()){
-                    if (this.type == VIDEO && (f.endsWith('mp4') || f.endsWith('webm'))){
+                    if (this.type == VIDEO && (f_upper.endsWith('MP4') || f_upper.endsWith('WEBM') || f_upper.endsWith('MOV'))){
                         file.order = counter;
                         file.name = f;
                         file.size = size;
@@ -260,7 +272,7 @@ export default {
                         file.isFolder = false;
                         this.items.push(file)
                         counter ++;
-                    } else if (this.type == IMAGE && (f.endsWith('gif') || f.endsWith('jpg') || f.endsWith('JPG') || f.endsWith('webp'))){
+                    } else if (this.type == IMAGE && (f_upper.endsWith('GIF') || f_upper.endsWith('JPG') || f_upper.endsWith('JPEG') || f_upper.endsWith('WEBP'))){
                         file.order = counter;
                         file.name = f;
                         file.size = size;
