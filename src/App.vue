@@ -1,18 +1,22 @@
 <template>
   <div id="app">
-    <div id="nav">
+    <!--div id="nav">
       <router-link to="/">Media Player</router-link> 
-    </div>
+    </div-->
     <router-view/>
   </div>
 </template>
 
 <style>
+
+body {
+  background: #2d2d2d;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
+  color: #ededed;
 }
 
 html, body, #app, section.section {
@@ -43,7 +47,7 @@ html, body, #app, section.section {
     min-height: 88vh;
     margin-left: -500px;
       /* don't forget to add all the previously mentioned styles here too */
-    background: #c4c4c4;
+    background: #353535;
     color: rgb(0, 0, 0);
     transition: all 0.3s;
 }
@@ -51,7 +55,17 @@ html, body, #app, section.section {
     margin-left: 0;
 }
 .list-group-item.active {
-    background: #8b8b8b;
+    background: #484848;
+}
+
+.list-group-item {
+  background: #636363;
+  color: #efefef; 
+}
+
+input {
+  background: #bdbdbd;
+  border: none;
 }
 
 

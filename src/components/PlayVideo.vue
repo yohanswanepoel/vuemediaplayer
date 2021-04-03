@@ -8,13 +8,13 @@
             </div>
             <div>
                     <input v-model="filter" placeholder="filter" style="width: 55%;" v-on:keyup="filterList">
-                     | <button class="btn btn-outline-secondary btn-sm" v-bind:class="{ active: type == 1 }" v-on:click="showVideos()">Vid</button>
-                     | <button class="btn btn-outline-secondary btn-sm" v-bind:class="{ active: type == 2 }"  v-on:click="showImages()">Img</button>
+                     | <button class="btn btn-outline-light btn-sm" v-bind:class="{ active: type == 1 }" v-on:click="showVideos()">Vid</button>
+                     | <button class="btn btn-outline-light btn-sm" v-bind:class="{ active: type == 2 }"  v-on:click="showImages()">Img</button>
             </div>
             <div>
-                <button type="button" class="btn btn-sm btn-secondary" v-on:click="back()"><i class="fas fa-undo fa-lg"></i> Back</button>
-                | <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-secondary btn-sm" v-on:click='loadfiles_btn()'><i class="fas fa-sort fa-lg"></i> Reload</button>
-                | <button v-if="type==VIDEO_TYPE" type="button" class="btn btn-secondary btn-sm" v-on:click='playallrandom()'><i class="fas fa-random fa-lg"></i> Random</button>
+                <button type="button" class="btn btn-sm btn-outline-light" v-on:click="back()"><i class="fas fa-undo fa-lg"></i> Back</button>
+                | <button type="button" class="btn btn-outline-light btn-sm" v-on:click='loadfiles_btn()'><i class="fas fa-sort fa-lg"></i> Reload</button>
+                | <button  type="button" class="btn btn-outline-light btn-sm" v-on:click='playallrandom()'><i class="fas fa-random fa-lg"></i> Shuffle</button>
             </div>
             <div id="fileContainer" class="overflow-auto" :style="fileStyle">
                 <ul class="list-group">
@@ -27,11 +27,16 @@
             </div>
         </nav>
         <div id="content" class="container-fluid">
-            <div style="padding-bottom: 5px">
-                <button type="button" id="sidebarCollapse" v-on:click="toggleSideBar()" class="btn-sm btn-secondary">
-                    <i class="fas fa-align-left"></i> Files
-                </button>
+            <div style="padding-bottom: 5px; padding-top:2px;">
+                <div style="float: left;">
+                    <button type="button" id="sidebarCollapse" v-on:click="toggleSideBar()" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-align-left"></i> Files
+                    </button>
+                </div>
+                
+                <div style="text-align: center; width:100%;">
                 Now Playing: {{ file }}
+                </div>
             </div>
             <video v-if="type==VIDEO_TYPE" class="media" width="100%" :height="mediaHeight" controls ref="video" @ready="ready"
                 @ended="ended"
@@ -72,6 +77,8 @@ export default {
             mediaHeight: 700,
             fileStyle: "width: 100%; height:700px",
             currentItem: -1,
+            canvas_multiplier: .95,
+            file_browse_multiplier: .90,
             filter: '',
             showSideBar: false
         }
@@ -101,8 +108,8 @@ export default {
         });
 
 
-        this.mediaHeight = parseInt(this.windowHeight * .89);
-
+        this.mediaHeight = parseInt(this.windowHeight * this.canvas_multiplier);
+        this.fileStyle = "width: 100%; height:" + parseInt(this.windowHeight * this.file_browse_multiplier) + "px";
         
     },
     watch: {
@@ -125,8 +132,8 @@ export default {
         },
         onResize() {
             this.windowHeight = window.innerHeight
-            this.mediaHeight = parseInt(this.windowHeight * .89);
-            this.fileStyle = "width: 100%; height:" + parseInt(this.windowHeight * .7) + "px";
+            this.mediaHeight = parseInt(this.windowHeight * this.canvas_multiplier);
+            this.fileStyle = "width: 100%; height:" + parseInt(this.windowHeight * this.file_browse_multiplier) + "px";
             console.log(this.fileStyle);
         },
         showVideos() {
@@ -175,7 +182,7 @@ export default {
         playnext(){
             this.scrollToSelect(this.currentItem - 1);
             if (this.currentItem == (this.items.length - 1)){
-                this.handlefileclick(this.items[nextTrack], nextTrack);
+                this.handlefileclick(this.items[0], 0);
             } else {
                 this.handlefileclick(this.items[this.currentItem + 1], this.currentItem + 1);
             }
@@ -275,6 +282,7 @@ export default {
                 }else{
                     if (aItem.isImage){
                         this.file = aItem.name;
+                        this.currentItem = anIndex;
                     }
                     if (aItem.isVideo) {
                         this.file = aItem.name;
@@ -286,7 +294,7 @@ export default {
                         //vid.autoplay = false;
                         vid.load();
                         vid.play();
-                        this.showSideBar = false;
+                        //this.showSideBar = false;
                     }
                 }
             }
