@@ -15,6 +15,7 @@
                 <button type="button" class="btn btn-sm btn-outline-light" v-on:click="back()"><i class="fas fa-undo fa-lg"></i> Back</button>
                 | <button type="button" class="btn btn-outline-light btn-sm" v-on:click='loadfiles_btn()'><i class="fas fa-sort fa-lg"></i> Reload</button>
                 | <button  type="button" class="btn btn-outline-light btn-sm" v-on:click='playallrandom()'><i class="fas fa-random fa-lg"></i> Shuffle</button>
+                | <button v-if='type == 2' type="button" class="btn btn-outline-light btn-sm" v-on:click='loop()'><i class="fas fa-lg" v-bind:class="{ 'fa-play': image_loop==false, 'fa-pause': image_loop }"></i> {{ image_loop_label }}</button>
             </div>
             <div id="fileContainer" class="overflow-auto" :style="fileStyle">
                 <ul class="list-group">
@@ -80,7 +81,11 @@ export default {
             canvas_multiplier: .95,
             file_browse_multiplier: .90,
             filter: '',
-            showSideBar: false
+            showSideBar: false,
+            image_loop: false,
+            image_loop_label: "Loop",
+            loop_icon: "fa-play",
+            loop_variable: null
         }
     },
     created(){
@@ -178,6 +183,15 @@ export default {
                 folder = folder + "/";
             }
             return folder;
+        },
+        loop(){
+            this.image_loop = !this.image_loop;
+            this.image_loop ? this.image_loop_label="Pause" : this.image_loop_label="Loop";
+            if (!this.image_loop_label){
+                clearTimeout(this.loop_variable);
+            } else {
+                this.playnext();
+            }   
         },
         playnext(){
             this.scrollToSelect(this.currentItem - 1);
@@ -283,6 +297,9 @@ export default {
                     if (aItem.isImage){
                         this.file = aItem.name;
                         this.currentItem = anIndex;
+                        if (this.image_loop){
+                            this.loop_variable = setTimeout(this.playnext, 2000)
+                        }
                     }
                     if (aItem.isVideo) {
                         this.file = aItem.name;
